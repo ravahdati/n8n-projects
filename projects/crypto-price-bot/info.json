@@ -1,0 +1,24 @@
+{
+  "title": {
+    "fa": "ربات قیمت ارز دیجیتال در تلگرام",
+    "en": "Crypto Price Telegram Bot"
+  },
+  "summary": {
+    "fa": "نام ارز را به فارسی یا انگلیسی بفرستید و قیمت لحظه‌ای آن را از بایننس بگیرید.",
+    "en": "Send a coin name in Persian or English and get its live price from Binance."
+  },
+  "description": {
+    "fa": "کاربر در تلگرام نام یک ارز دیجیتال را می‌نویسد، مثلاً «قیمت بیت کوین»، «اتریوم» یا «BTC».\n\nیک عامل هوش مصنوعی (OpenRouter) نام را به نماد استاندارد تبدیل می‌کند (مثلاً بیت کوین ← BTC). این کار باعث می‌شود ربات با نام‌های فارسی هم کار کند.\n\nنماد به همراه USDT به API بایننس ارسال می‌شود و قیمت لحظه‌ای به دلار در پیامی خوانا برای کاربر ارسال می‌شود. اگر ارز پیدا نشود، پیام خطای مناسب نمایش داده می‌شود.\n\nبرای استفاده: فایل را در n8n وارد کنید و اعتبارنامه‌های تلگرام و OpenRouter را تنظیم کنید. برای قیمت بایننس نیازی به کلید API نیست.",
+    "en": "A user writes a cryptocurrency name in Telegram, for example \"Bitcoin price\", \"Ethereum\" or \"BTC\".\n\nAn AI agent (OpenRouter) converts the name to its standard ticker (e.g. Bitcoin → BTC), so the bot understands Persian names as well.\n\nThe ticker plus USDT is sent to the Binance API and the live USD price is returned in a clean message. If the coin isn't found, a friendly error is shown.\n\nTo use it: import the file into n8n and set up your Telegram and OpenRouter credentials. The Binance price endpoint needs no API key."
+  },
+  "tags": {
+    "fa": ["تلگرام", "ارز دیجیتال", "هوش مصنوعی", "ربات"],
+    "en": ["Telegram", "Crypto", "AI", "Bot"]
+  },
+  "difficulty": { "fa": "مبتدی", "en": "Beginner" },
+  "created": "2026-10-31",
+  "image": "preview.png",
+  "workflow": "workflow.json",
+  "nodes": ["Telegram Trigger", "Telegram", "AI Agent", "OpenRouter", "HTTP Request", "Code"],
+  "featured": false
+}

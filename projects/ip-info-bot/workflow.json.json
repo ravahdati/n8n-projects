@@ -1,0 +1,252 @@
+{
+  "name": "IP Info Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const aiResponse = $input.first().json.output || $input.first().json.text || '';\nconst ip = aiResponse.trim();\n\nreturn {\n  json: {\n    ip: ip,\n    chatId: $('Telegram Trigger').item.json.message.chat.id\n  }\n};"
+      },
+      "id": "6addb0b9-4f56-4468-8c59-e86e03ee4f1f",
+      "name": "Extract IP",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://ip-api.com/json/{{ $json.ip }}?fields=status,message,country,regionName,city,zip,lat,lon,isp,org,query",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "9d98ef08-ae8a-4309-9781-a2d48486565b",
+      "name": "Get IP Info (ip-api.com)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ip = $('Extract IP').first().json.ip;\nconst chatId = $('Extract IP').first().json.chatId;\nconst data = $('Get IP Info (ip-api.com)').item.json;\n\ntry {\n  if (data && data.status === 'success') {\n    const lines = [];\n    lines.push(`🖧 IP: ${data.query}`);\n    lines.push(`🌍 کشور: ${data.country || '-'} ` + (data.regionName ? `(${data.regionName})` : ''));\n    lines.push(`🏙️ شهر: ${data.city || '-'} ${data.zip ? ' / ' + data.zip : ''}`);\n    lines.push(`📍 مختصات: ${data.lat || '-'}, ${data.lon || '-'} `);\n    lines.push(`🏢 ISP: ${data.isp || '-'} ` + (data.org ? ` / ${data.org}` : ''));\n\n    const message = lines.join('\\n');\n\n    return {\n      json: {\n        chatId: chatId,\n        message: message\n      }\n    };\n  } else if (data && data.status === 'fail') {\n    return {\n      json: {\n        chatId: chatId,\n        message: `❌ نتایج برای IP ${ip} یافت نشد: ${data.message || 'Unknown error'}`\n      }\n    };\n  }\n} catch (err) {\n  return {\n    json: {\n      chatId: chatId,\n      message: `❌ خطا در پردازش اطلاعات IP ${ip}`\n    }\n  };\n}\n\nreturn {\n  json: {\n    chatId: chatId,\n    message: `❌ خطا در دریافت اطلاعات برای IP ${ip}`\n  }\n};"
+      },
+      "id": "f48f8479-5b45-4b9b-b3f0-af6be5d925f0",
+      "name": "Format IP Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "8d0b37be-eaaf-4a7f-b2c8-8c97399260f5",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1472,
+        0
+      ],
+      "webhookId": "948bb47a-e37f-47e3-9635-8f879f21d559",
+      "credentials": {
+        "telegramApi": {
+          "id": "mr4johrnaI7JeiuP",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').item.json.message.text }}",
+        "options": {
+          "systemMessage": "تو یک دستیار هستی که باید از متن کاربر یک آدرس IP استخراج کنی و فقط IP را برگردانی (مثال‌ها را ببین). اگر متن حاوی آدرس IP نیست، سعی کن عدد/متنی که شبیه IP است را برگردانی. فقط IP را بنویس، هیچ توضیح اضافه‌ای نده.\n\nمثال‌ها:\n- 'اطلاعات 8.8.8.8' -> 8.8.8.8\n- 'IP من 185.55.**' -> 185.55.x.x\n- 'پینگ 1.1.1.1 لطفا' -> 1.1.1.1\n\nاگر کاربر فقط متن غیر مرتبط فرستاد، برگرداندن یک رشته خالی یا همان متن اصلی مشکلی ندارد."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "23de60dd-da47-4cf2-83cb-28a85d4e2b9c",
+      "name": "AI Agent (Extract IP)"
+    },
+    {
+      "parameters": {
+        "model": "x-ai/grok-4.20",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        520,
+        232
+      ],
+      "id": "2f8c7eff-2582-4829-91b2-38e035b6d68f",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "HRXB7iV5ejYSgRNt",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.from.id }}",
+        "text": "=در حال دریافت اطلاعات IP... لطفاً چند لحظه صبر کنید...",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "1ec1ed0e-4dda-4208-aed4-720821f409c1",
+      "name": "Send Waiting Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        0
+      ],
+      "webhookId": "948bb47a-e37f-47e3-9635-8f879f21d559",
+      "credentials": {
+        "telegramApi": {
+          "id": "mr4johrnaI7JeiuP",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8cf2de53-4c19-4c58-8783-a49b55a3b743",
+      "name": "Telegram Trigger",
+      "webhookId": "1650c67b-0ad8-4d22-a06a-fab49762d63a",
+      "credentials": {
+        "telegramApi": {
+          "id": "mr4johrnaI7JeiuP",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract IP": {
+      "main": [
+        [
+          {
+            "node": "Get IP Info (ip-api.com)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get IP Info (ip-api.com)": {
+      "main": [
+        [
+          {
+            "node": "Format IP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format IP Response": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent (Extract IP)": {
+      "main": [
+        [
+          {
+            "node": "Extract IP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent (Extract IP)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Waiting Message": {
+      "main": [
+        [
+          {
+            "node": "AI Agent (Extract IP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send Waiting Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4bc86592-612d-4cb8-b819-e0972c3bcacc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "644a50724117272c9c54df881f1b0f439a9620abe7b6557f640fc091b8e504d7"
+  },
+  "nodeGroups": [],
+  "id": "rbGkCmJrnKiI2gdL",
+  "tags": []
+}

@@ -1,0 +1,24 @@
+{
+  "title": {
+    "fa": "ربات اطلاعات IP در تلگرام",
+    "en": "IP Info Telegram Bot"
+  },
+  "summary": {
+    "fa": "کاربر در تلگرام یک آدرس IP می‌فرستد و کشور، شهر، مختصات و ISP آن را دریافت می‌کند.",
+    "en": "Send an IP address to the Telegram bot and get its country, city, coordinates and ISP."
+  },
+  "description": {
+    "fa": "این ربات پیام کاربر را در تلگرام دریافت می‌کند و بلافاصله پیام «در حال دریافت اطلاعات…» می‌فرستد.\n\nسپس یک عامل هوش مصنوعی (از طریق OpenRouter) آدرس IP را از متن آزاد کاربر استخراج می‌کند؛ بنابراین کاربر می‌تواند جمله‌ای مثل «اطلاعات 8.8.8.8» بنویسد.\n\nآی‌پی استخراج‌شده به سرویس ip-api.com ارسال می‌شود و نتیجه (کشور، استان، شهر، کد پستی، مختصات و ISP) به فارسی قالب‌بندی و برای کاربر ارسال می‌شود. در صورت خطا یا IP نامعتبر، پیام خطای مناسب برگردانده می‌شود.\n\nبرای استفاده: فایل را در n8n وارد کنید و اعتبارنامه‌های تلگرام و OpenRouter را تنظیم کنید.",
+    "en": "The bot receives a user's Telegram message and instantly replies with a short \"fetching…\" notice.\n\nAn AI agent (via OpenRouter) then extracts the IP address from free-form text, so users can write natural sentences such as \"info 8.8.8.8\".\n\nThe extracted IP is looked up on ip-api.com, and the result (country, region, city, ZIP, coordinates and ISP) is formatted in Persian and sent back. Invalid IPs and API errors return a friendly error message.\n\nTo use it: import the file into n8n and set up your Telegram and OpenRouter credentials."
+  },
+  "tags": {
+    "fa": ["تلگرام", "هوش مصنوعی", "ربات", "IP"],
+    "en": ["Telegram", "AI", "Bot", "IP"]
+  },
+  "difficulty": { "fa": "مبتدی", "en": "Beginner" },
+  "created": "2026-10-31",
+  "image": "preview.png",
+  "workflow": "workflow.json",
+  "nodes": ["Telegram Trigger", "Telegram", "AI Agent", "OpenRouter", "HTTP Request", "Code"],
+  "featured": false
+}

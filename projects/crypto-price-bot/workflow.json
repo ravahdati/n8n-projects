@@ -1,0 +1,251 @@
+{
+  "name": "Crypto Price Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const aiResponse = $input.first().json.output;\nconst symbol = aiResponse.trim().toUpperCase();\n\nreturn {\n  json: {\n    symbol: symbol,\n    chatId: $('Telegram Trigger').item.json.message.chat.id\n  }\n};"
+      },
+      "id": "f93a4303-cd97-46f4-b3ea-859de4bd606e",
+      "name": "Extract Symbol",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.binance.com/api/v3/ticker/price?symbol={{ $json.symbol }}USDT",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "e71f9d08-f82e-45bd-ae90-6d97796bdee1",
+      "name": "Get Price - Binance (Backup)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const symbol = $('Extract Symbol').first().json.symbol;\nconst chatId = $('Extract Symbol').first().json.chatId;\n\ntry {\n    const binanceData = $('Get Price - Binance (Backup)').item.json;\n    if (binanceData.price) {\n      const price = parseFloat(binanceData.price).toFixed(2);\n      const message = `💰 نماد: ${symbol.toUpperCase()}/USDT\\n` +\n                     `💵 قیمت: ${parseFloat(price).toLocaleString()} دلار\\n` +\n                     `📊 منبع: Binance`;\n      \n      return {\n        json: {\n          chatId: chatId,\n          message: message\n        }\n      };\n    }\n  } catch (binanceError) {\n    return {\n      json: {\n        chatId: chatId,\n        message: `❌ متأسفانه نتوانستم قیمت ${symbol} را پیدا کنم. لطفاً از نام صحیح رمز ارز استفاده کنید.`\n      }\n    };\n  }\n\nreturn {\n  json: {\n    chatId: chatId,\n    message: `❌ خطا در دریافت قیمت ${symbol}`\n  }\n};"
+      },
+      "id": "778066b6-f1ee-4054-91d7-6dc3ecea98aa",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "759f8551-56a0-4a22-b847-4b35a31a1f21",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1472,
+        0
+      ],
+      "webhookId": "948bb47a-e37f-47e3-9635-8f879f21d559",
+      "credentials": {
+        "telegramApi": {
+          "id": "mr4johrnaI7JeiuP",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').item.json.message.text }}",
+        "options": {
+          "systemMessage": "تو یک دستیار هستی که باید از متن کاربر، نام رمز ارز را استخراج کنی و فقط symbol استاندارد آن را برگردانی. مثال:\n- 'قیمت BTC' -> BTC\n- 'قیمت بیت کوین' -> BTC\n- 'اتریوم' -> ETH\n- 'دوج کوین' -> DOGE\n- 'سولانا' -> SOL\n\nفقط symbol را بنویس، هیچ توضیح اضافه‌ای نده."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "1fc61bd9-b7f5-4086-9537-b4707b41e3ab",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "x-ai/grok-4.1-fast:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        528,
+        240
+      ],
+      "id": "3b58bcd9-577f-4eff-8911-6219b10d7562",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "HRXB7iV5ejYSgRNt",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c12da76a-54f4-46e5-a3ee-04be498f4928",
+      "name": "Telegram Trigger",
+      "webhookId": "6b4ba42a-3cf6-4486-8247-e0296667ab96",
+      "credentials": {
+        "telegramApi": {
+          "id": "mr4johrnaI7JeiuP",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.from.id }}",
+        "text": "=در حال دریافت آخرین قیمت... لطفاً منتظر بمانید...",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "93e5adc7-0b91-4a43-bf1f-2401e68d3608",
+      "name": "Send Waiting Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        0
+      ],
+      "webhookId": "948bb47a-e37f-47e3-9635-8f879f21d559",
+      "credentials": {
+        "telegramApi": {
+          "id": "mr4johrnaI7JeiuP",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract Symbol": {
+      "main": [
+        [
+          {
+            "node": "Get Price - Binance (Backup)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Price - Binance (Backup)": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Extract Symbol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send Waiting Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Waiting Message": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2cd6d663-0f1f-4a0b-b97d-e41fbcb67b52",
+  "meta": {
+    "instanceId": "644a50724117272c9c54df881f1b0f439a9620abe7b6557f640fc091b8e504d7"
+  },
+  "nodeGroups": [],
+  "id": "wmtkO12A33PekGM6",
+  "tags": []
+}
