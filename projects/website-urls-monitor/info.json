@@ -1,0 +1,24 @@
+{
+  "title": {
+    "fa": "مانیتور وضعیت وب‌سایت‌ها",
+    "en": "Website URL Monitor"
+  },
+  "summary": {
+    "fa": "هر ۵ دقیقه وضعیت چند وب‌سایت را بررسی می‌کند و گزارش بالا یا پایین بودن آن‌ها را در تلگرام می‌فرستد.",
+    "en": "Checks several websites every 5 minutes and sends an up/down report to Telegram."
+  },
+  "description": {
+    "fa": "این ورک‌فلو هر ۵ دقیقه اجرا می‌شود و فهرست سایت‌هایی را که در نود «Sites list» تعریف کرده‌اید بررسی می‌کند. برای افزودن یا حذف سایت فقط کافی است آدرس‌ها را در همین نود ویرایش کنید.\n\nبرای هر سایت یک درخواست HTTP با مهلت ۱۵ ثانیه ارسال می‌شود. کد وضعیت ۲۰۰ تا ۳۹۹ به معنی بالا بودن سایت (✅ UP) است و هر کد دیگر یا نبود پاسخ به معنی پایین بودن آن (❌ DOWN) در نظر گرفته می‌شود. خطای اتصال باعث توقف ورک‌فلو نمی‌شود.\n\nدر پایان، نتیجه همه سایت‌ها در یک گزارش واحد جمع می‌شود و به تلگرام ارسال می‌شود. یک تریگر دستی هم برای تست سریع وجود دارد.\n\nبرای استفاده: فایل را در n8n وارد کنید، اعتبارنامه تلگرام را تنظیم کنید و شناسه چت (Chat ID) خود را در نود «Send to Telegram» وارد کنید.",
+    "en": "This workflow runs every 5 minutes and checks the list of sites defined in the \"Sites list\" node. To add or remove a site, just edit the URLs in that node.\n\nEach site receives an HTTP request with a 15-second timeout. A status code from 200 to 399 means the site is up (✅ UP); any other code, or no response, counts as down (❌ DOWN). Connection errors never stop the workflow.\n\nThe results for all sites are combined into a single report and sent to Telegram. A manual trigger is included for quick testing.\n\nTo use it: import the file into n8n, set up your Telegram credentials and enter your Chat ID in the \"Send to Telegram\" node."
+  },
+  "tags": {
+    "fa": ["مانیتورینگ", "تلگرام", "وب‌سایت", "زمان‌بندی"],
+    "en": ["Monitoring", "Telegram", "Website", "Schedule"]
+  },
+  "difficulty": { "fa": "مبتدی", "en": "Beginner" },
+  "created": "2026-11-02",
+  "image": "preview.png",
+  "workflow": "workflow.json",
+  "nodes": ["Schedule Trigger", "Manual Trigger", "Code", "HTTP Request", "Telegram"],
+  "featured": false
+}

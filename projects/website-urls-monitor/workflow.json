@@ -1,0 +1,181 @@
+{
+  "name": "Website URL Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "046fedcc-e6a6-48dd-b313-a2e9c614cb83",
+      "name": "Every 5 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Add or remove sites here\nconst sites = [\n  'https://n8n.io',\n  'https://google.com',\n];\nreturn sites.map(url => ({ json: { url } }));\n"
+      },
+      "id": "e8ee3de1-9613-4fbf-a165-9e5934fad697",
+      "name": "Sites list",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "body"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "1901d0b0-eb0d-4c99-866a-555bfd552de1",
+      "name": "Check site",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        416
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const sites = $('Sites list').all();\nconst checks = $input.all();\nconst lines = sites.map((s, i) => {\n  const code = Number(checks[i] && checks[i].json.statusCode) || 0;\n  const up = code >= 200 && code < 400;\n  return (up ? '✅ UP' : '❌ DOWN') + ' ' + s.json.url + ' (' + (code ? 'HTTP ' + code : 'No response') + ')';\n});\nconst text = 'Website check report\\n\\n' + lines.join('\\n');\nreturn [{ json: { text } }];\n"
+      },
+      "id": "edb137c5-c9f5-4f55-8551-bee4c9f157e8",
+      "name": "Build report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "<__PLACEHOLDER_VALUE__Telegram chat ID__>",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "ada9738e-954f-4a46-9298-0997145caaed",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        416
+      ],
+      "webhookId": "c4685c3e-1e1e-4df6-a90a-976a1778ce8d",
+      "credentials": {
+        "telegramApi": {
+          "id": "mr4johrnaI7JeiuP",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "f4ed7ab7-e3e2-4513-8ccc-f2a63360bff3",
+      "name": "Manual test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        512
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Sites list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sites list": {
+      "main": [
+        [
+          {
+            "node": "Check site",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check site": {
+      "main": [
+        [
+          {
+            "node": "Build report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build report": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual test": {
+      "main": [
+        [
+          {
+            "node": "Sites list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e02b68eb-248f-4846-b3ad-a5ddc560a9b3",
+  "meta": {
+    "instanceId": "644a50724117272c9c54df881f1b0f439a9620abe7b6557f640fc091b8e504d7"
+  },
+  "nodeGroups": [],
+  "id": "8EhtyFdPr0KbO8J0",
+  "tags": []
+}

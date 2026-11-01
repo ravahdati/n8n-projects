@@ -1,0 +1,24 @@
+{
+  "title": {
+    "fa": "عامل خبری روزانه فناوری",
+    "en": "Daily Tech News Agent"
+  },
+  "summary": {
+    "fa": "هر روز ساعت ۷ صبح ۵ خبر مهم فناوری را از چند سایت انتخاب، خلاصه و در تلگرام و واتساپ ارسال می‌کند.",
+    "en": "Every morning at 7:00 it picks the 5 most important tech stories from several sites, summarizes them and sends them to Telegram and WhatsApp."
+  },
+  "description": {
+    "fa": "این ورک‌فلو هر روز ساعت ۷ صبح اجرا می‌شود و فید RSS چند سایت خبری فناوری فارسی (تکراتو، دیجیاتو، زومیت و گجت‌نیوز) را همزمان می‌خواند.\n\nخبرهای ۲۴ ساعت اخیر ادغام و پاک‌سازی می‌شوند و حداکثر ۴۰ خبر به یک عامل هوش مصنوعی در نقش سردبیر داده می‌شود تا ۵ خبر مهم و جذاب برای مخاطب ایرانی را با درنظر گرفتن تنوع موضوع و منبع انتخاب کند.\n\nدر مرحله بعد، یک عامل دیگر برای هر خبر خلاصه‌ای کوتاه و روان به فارسی می‌نویسد. در پایان، پیام نهایی با تاریخ شمسی، عنوان، خلاصه، منبع و لینک ادامه مطلب ساخته می‌شود و همزمان در تلگرام و واتساپ ارسال می‌شود.\n\nبرای استفاده: فایل را در n8n وارد کنید، اعتبارنامه‌های OpenRouter و تلگرام را تنظیم کنید و شناسه چت و اطلاعات سرویس واتساپ را با اطلاعات خودتان جایگزین کنید.",
+    "en": "This workflow runs every day at 7:00 AM and reads the RSS feeds of several Persian tech news sites (Techrato, Digiato, Zoomit and GadgetNews) in parallel.\n\nStories from the last 24 hours are merged and cleaned, and up to 40 are passed to an AI agent acting as an editor, which selects the 5 most important and engaging stories for an Iranian audience, balancing topics and sources.\n\nA second AI agent then writes a short, fluent Persian summary for each story. Finally the message is assembled with the Persian date, title, summary, source and a read-more link, and is sent to Telegram and WhatsApp at the same time.\n\nTo use it: import the file into n8n, set up your OpenRouter and Telegram credentials, and replace the chat ID and WhatsApp service details with your own."
+  },
+  "tags": {
+    "fa": ["اخبار", "هوش مصنوعی", "RSS", "تلگرام", "واتساپ"],
+    "en": ["News", "AI", "RSS", "Telegram", "WhatsApp"]
+  },
+  "difficulty": { "fa": "پیشرفته", "en": "Advanced" },
+  "created": "2026-10-31",
+  "image": "preview.png",
+  "workflow": "workflow.json",
+  "nodes": ["Schedule Trigger", "RSS Feed Read", "Merge", "Code", "AI Agent", "OpenRouter", "Telegram", "HTTP Request"],
+  "featured": true
+}

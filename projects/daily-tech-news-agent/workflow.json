@@ -1,0 +1,604 @@
+{
+  "name": "Telegram Article Summarizer Bot",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "83a2f9cf-82e6-4fe5-b896-6fed99eba25f",
+      "name": "Final Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2656,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const selectedNews = $input.all();\nconst allNewsItems = $('Process News').all();\n\nconst mergedNews = selectedNews.map(selected => {\n  const selectedTitle = selected.json?.title;\n  const reason = selected.json?.reason;\n  \n  // پیدا کردن خبر کامل با مقایسه عناوین\n  const fullNews = allNewsItems.find(item => {\n    const itemTitle = item.json?.title;\n    if (!itemTitle || !selectedTitle) return false;\n    \n    // مقایسه 30 کاراکتر اول برای دقت بیشتر\n    const compareLength = Math.min(30, itemTitle.length, selectedTitle.length);\n    return (\n      itemTitle.substring(0, compareLength) === selectedTitle.substring(0, compareLength) ||\n      itemTitle.includes(selectedTitle.substring(0, 20)) ||\n      selectedTitle.includes(itemTitle.substring(0, 20))\n    );\n  });\n\n  if (fullNews) {\n    return {\n      json: {\n        ...fullNews.json,\n        aiReason: reason\n      }\n    };\n  }\n  return selected;\n});\n\nconsole.log(`Merged news count: ${mergedNews.length}`);\n\nreturn mergedNews;"
+      },
+      "id": "7f6f3e82-2c32-4311-a25d-1ca372866d85",
+      "name": "Merge Full Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3776,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $('AI Select Top 5 News').item.json.output;\nlet content = typeof response === 'string' ? response : (response.text || response.content || JSON.stringify(response));\n\nlet selectedNews;\ntry {\n  // حذف markdown code blocks\n  content = content.replace(/```json\\n?|```\\n?/g, '').trim();\n  selectedNews = JSON.parse(content);\n  if (!Array.isArray(selectedNews)) {\n    selectedNews = [selectedNews];\n  }\n} catch (error) {\n  console.error('Parse error:', error);\n  console.error('Content:', content);\n  selectedNews = [];\n}\n\nconsole.log(`Selected news count: ${selectedNews.length}`);\n\n// اطمینان از داشتن دقیقاً 5 خبر\nreturn selectedNews.slice(0, 5).map(news => ({ json: news }));"
+      },
+      "id": "61de97d7-ffc4-42ac-b2a2-dea4c518a8fc",
+      "name": "Parse Selection",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allNews = $input.all();\nconst newsText = allNews.map((item, index) => \n  `خبر ${index + 1}:\nعنوان: ${item.json.title}\nمتن: ${item.json.content}\nمنبع: ${item.json.source}\nدلیل انتخاب: ${item.json.aiReason || 'ندارد'}`\n).join('\\n\\n━━━━━━━━━━━━━━━━\\n\\n');\n\nreturn [{ \n  json: { \n    newsText, \n    newsItems: allNews.map(item => item.json),\n    newsCount: allNews.length\n  } \n}];"
+      },
+      "id": "08374cf4-422b-4f8d-9c04-be3d7fc456ec",
+      "name": "Prepare for Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3952,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.360messenger.com/v2/sendMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Token",
+              "value": "f1jytF4PWVygsCQBlEqlKD6thKoey5EMYVs"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phonenumber",
+              "value": "+989127327144"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4928,
+        1584
+      ],
+      "id": "e06ee3c9-7aa7-4a24-9f54-9ddcee4159c0",
+      "name": "Send WhatsApp",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "OwKexQt7Fl3iEvco",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "88840670",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_web_page_preview": true,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "63742952-fa94-41da-8b99-76e89ec52a72",
+      "name": "Send Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        4928,
+        1424
+      ],
+      "webhookId": "358a2607-0770-4615-aea5-efb6ac80c4bc",
+      "credentials": {
+        "telegramApi": {
+          "id": "L5kKOovCQF1ppCpX",
+          "name": "Telegram account - Top Important News"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const allNews = $input.all();\nconst persianDate = new Date().toLocaleDateString('fa-IR', { \n  year: 'numeric', \n  month: 'long', \n  day: 'numeric', \n  weekday: 'long' \n});\n\nlet message = `📱 *اخبار برگزیده فناوری*\\n🗓 ${persianDate}\\n\\n━━━━━━━━━━━━━━━━\\n\\n`;\n\nconst emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];\n\nallNews.forEach((item, index) => {\n  const news = item.json;\n  message += `${emojis[index] || '🔹'} *${news.title}*\\n\\n`;\n  message += `${news.summary}\\n\\n`;\n  message += `📰 منبع: ${news.source}\\n`;\n  message += `🔗 [ادامه مطلب](${news.link})\\n\\n`;\n  message += `━━━━━━━━━━━━━━━━\\n\\n`;\n});\n\nmessage += `✨ _این خبرنامه با هوش مصنوعی تهیه شده است_\\n`;\nmessage += `⏰ ${new Date().toLocaleTimeString('fa-IR')}\\n`;\nmessage += `📊 انتخاب شده از بین تمام منابع خبری`;\n\nconsole.log(`Final message length: ${message.length} chars`);\n\nreturn [{ json: { message, newsCount: allNews.length } }];"
+      },
+      "id": "9eea5576-d8ca-448f-8604-9f78d5e010b7",
+      "name": "Format Telegram Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4656,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $('AI Summarize News').item.json.output;\nconst newsItems = $('Prepare for Summary').item.json.newsItems;\n\nlet summaries;\ntry {\n  let content = typeof response === 'string' ? response : (response.text || response.content || JSON.stringify(response));\n  content = content.replace(/```json\\n?|```\\n?/g, '').trim();\n  summaries = JSON.parse(content);\n  if (!Array.isArray(summaries)) summaries = [summaries];\n} catch (error) {\n  console.error('Parse error:', error);\n  console.error('Content:', response);\n  summaries = [];\n}\n\n// ترکیب خلاصه‌ها با اخبار اصلی\nconst mergedNews = newsItems.map((news, index) => {\n  const matchingSummary = summaries.find(s => \n    s.title && news.title && \n    (s.title.includes(news.title.substring(0, 20)) || \n     news.title.includes(s.title.substring(0, 20)))\n  ) || summaries[index];\n  \n  return {\n    json: {\n      ...news,\n      summary: matchingSummary?.summary || news.description || 'خلاصه در دسترس نیست'\n    }\n  };\n});\n\nconsole.log(`Final news with summaries: ${mergedNews.length}`);\n\nreturn mergedNews;"
+      },
+      "id": "0b5dfeee-3919-44d7-9b63-9f4f6a84a9fe",
+      "name": "Parse Summaries",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4464,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'برای هر کدام از این ' + $json.newsCount + ' خبر تکنولوژی، یک خلاصه جذاب و مختصر به فارسی بنویس. هر خلاصه باید:\\n- حداکثر 2-3 جمله (150-200 کاراکتر)\\n- نکات کلیدی و مهم را پوشش دهد\\n- برای مخاطب ایرانی جذاب باشد\\n- از زبان ساده و روان استفاده کند\\n\\nفقط یک آرایه JSON برگردان:\\n[{\"title\": \"عنوان\", \"summary\": \"خلاصه\"}]\\n\\nاخبار:\\n' + $json.newsText }}",
+        "options": {
+          "systemMessage": "شما یک روزنامه‌نگار تکنولوژی حرفه‌ای فارسی هستید. خلاصه‌های شما باید مختصر، جذاب و قابل فهم باشند. هر خلاصه حداکثر 200 کاراکتر و 2-3 جمله. فقط JSON array برگردان بدون هیچ متن اضافی."
+        }
+      },
+      "id": "d0f94a95-7cde-4d81-9832-c7c51b855eea",
+      "name": "AI Summarize News",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4176,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://techrato.com/feed/",
+        "options": {}
+      },
+      "id": "3104014e-27ca-49f8-821d-3d5b06dc14ee",
+      "name": "Zoomit",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        2208,
+        1568
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://techrato.com/feed/",
+        "options": {}
+      },
+      "id": "cc497136-2968-40c4-b8b9-d11ed18057e4",
+      "name": "Techrato",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        2208,
+        1280
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://digiato.com/feed/",
+        "options": {}
+      },
+      "id": "7db76bf0-bfbe-4e7e-b99f-ebad84e26b23",
+      "name": "Digiato",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        2208,
+        1424
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.gadgetnews.ir/feed/",
+        "options": {}
+      },
+      "id": "9bee35dd-5d7a-43b5-a32c-d31a4d5b773f",
+      "name": "GadgetNews",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        2208,
+        1712
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'تحلیل کن و 5 خبر برتر و مهم‌ترین را از این لیست انتخاب کن. اخباری که برای مخاطبان ایرانی جذاب‌تر و مهم‌تر هستند را در اولویت قرار بده. تنوع در موضوعات را در نظر بگیر (سعی کن از منابع مختلف باشد اگر خبر مهمی دارند):\\n\\n' + $json.newsList }}",
+        "options": {
+          "systemMessage": "شما یک سردبیر حرفه‌ای اخبار تکنولوژی فارسی هستید. تمام اخبار را از تمام منابع بررسی کن و 5 خبر برتر را انتخاب کن. \nمعیارهای انتخاب:\n1. اهمیت و تاثیرگذاری خبر\n2. جذابیت برای مخاطبان ایرانی\n3. تازگی و به‌روز بودن\n4. تنوع در موضوعات\n\nهمیشه فقط یک آرایه JSON معتبر برگردان با ساختار زیر:\n[\n  {\n    \"title\": \"عنوان کامل خبر\",\n    \"source\": \"منبع\",\n    \"description\": \"توضیحات\",\n    \"reason\": \"دلیل انتخاب این خبر به فارسی\"\n  }\n]\n\nهیچ متن اضافی قبل یا بعد از JSON نفرست."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3296,
+        1488
+      ],
+      "id": "6799560a-4f0f-4926-926d-d6ab8cab95a4",
+      "name": "AI Select Top 5 News"
+    },
+    {
+      "parameters": {},
+      "id": "13ec4e48-9b49-4393-9d8f-baa2f95d4fcc",
+      "name": "Merge 1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2448,
+        1344
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "d69db350-df3c-409e-a089-001880b92ee2",
+      "name": "Merge 2",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2448,
+        1632
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconst currentDate = new Date();\nconst oneDayAgo = new Date(currentDate - 24 * 60 * 60 * 1000);\n\nlet newsItems = [];\n// استخراج داده‌ها با توجه به ساختار Merge\nfor (const item of allItems) {\n  // چک میکنیم دیتای RSS مستقیم است یا داخل آرایه\n  if (item.json.title && item.json.link) {\n      newsItems.push(item.json);\n  } else if (item.json.data && Array.isArray(item.json.data)) {\n      newsItems = newsItems.concat(item.json.data);\n  }\n}\n\nconst recentNews = newsItems.filter(item => {\n  const pubDate = new Date(item.pubDate || item.isoDate);\n  return pubDate > oneDayAgo;\n});\n\nconst enrichedNews = recentNews.map((item, index) => ({\n  id: `news_${Date.now()}_${index}`,\n  title: item.title || 'بدون عنوان',\n  link: item.link || item.url || '',\n  description: (item.contentSnippet || item.description || '').substring(0, 150),\n  content: (item['content:encoded'] || item.content || item.description || '').substring(0, 1500),\n  pubDate: item.pubDate || item.isoDate,\n  source: extractSource(item.link)\n}));\n\nfunction extractSource(url) {\n  if (!url) return 'نامشخص';\n  if (url.includes('zoomit.ir')) return 'زومیت';\n  if (url.includes('digiato.com')) return 'دیجیاتو';\n  if (url.includes('techrato.com')) return 'تکراتو';\n  if (url.includes('gadgetnews.net')) return 'گجت نیوز';\n  return 'نامشخص';\n}\n\n// محدود کردن کل لیست به 40 خبر برای ارسال به هوش مصنوعی\nconst limitedNews = enrichedNews.slice(0, 40);\n\nconsole.log(`Total items merged: ${newsItems.length}`);\nconsole.log(`Recent news (24h): ${recentNews.length}`);\n\nreturn limitedNews.map(news => ({ json: news }));"
+      },
+      "id": "29152e7a-0e90-45b2-9040-713d2dc47c95",
+      "name": "Process News",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "news-list",
+              "name": "newsList",
+              "value": "={{ JSON.stringify($('Process News').all().map(item => ({ title: item.json.title, source: item.json.source, description: item.json.description }))) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aacab332-d56f-4cd0-9416-e8cee5dd59ba",
+      "name": "Aggregate News List",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        3072,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "model": "x-ai/grok-4.1-fast",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        1712
+      ],
+      "id": "0a8b0743-0f1b-4eb6-8ff0-a0e33017ac91",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "MNcpDNufFjjrgspy",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "x-ai/grok-4.1-fast",
+        "options": {}
+      },
+      "id": "ab7f3f77-eb3e-47be-897e-aaf19e65a13a",
+      "name": "OpenRouter Chat Model2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        4176,
+        1712
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "MNcpDNufFjjrgspy",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "c1bbaf26-d375-4493-b2d7-d73c43cf5a38",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1984,
+        1488
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Final Merge": {
+      "main": [
+        [
+          {
+            "node": "Process News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Full Data": {
+      "main": [
+        [
+          {
+            "node": "Prepare for Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Selection": {
+      "main": [
+        [
+          {
+            "node": "Merge Full Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare for Summary": {
+      "main": [
+        [
+          {
+            "node": "AI Summarize News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Summaries": {
+      "main": [
+        [
+          {
+            "node": "Format Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Summarize News": {
+      "main": [
+        [
+          {
+            "node": "Parse Summaries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zoomit": {
+      "main": [
+        [
+          {
+            "node": "Merge 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Techrato": {
+      "main": [
+        [
+          {
+            "node": "Merge 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Digiato": {
+      "main": [
+        [
+          {
+            "node": "Merge 1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "GadgetNews": {
+      "main": [
+        [
+          {
+            "node": "Merge 2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI Select Top 5 News": {
+      "main": [
+        [
+          {
+            "node": "Parse Selection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge 1": {
+      "main": [
+        [
+          {
+            "node": "Final Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge 2": {
+      "main": [
+        [
+          {
+            "node": "Final Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Process News": {
+      "main": [
+        [
+          {
+            "node": "Aggregate News List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate News List": {
+      "main": [
+        [
+          {
+            "node": "AI Select Top 5 News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Select Top 5 News",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Summarize News",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Techrato",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Digiato",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Zoomit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GadgetNews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "a8843f78-6d99-4f7a-8bf9-80f241e97b69",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7573420b0618ad55c568ca94bf12210a70b3e6c8d3b4879c519886d54a33922a"
+  },
+  "id": "Bv0Jo3IjZV0U3j93",
+  "tags": []
+}
