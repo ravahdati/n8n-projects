@@ -1,0 +1,24 @@
+{
+  "title": {
+    "fa": "ذخیره لیدهای سایت در گوگل شیت + دستیار هوش مصنوعی",
+    "en": "Website Leads to Google Sheets + AI Assistant"
+  },
+  "summary": {
+    "fa": "لیدهای فرم سایت (گرویتی فرم) را اعتبارسنجی و در گوگل شیت ذخیره می‌کند و با یک چت هوشمند می‌توانید درباره آن‌ها سؤال بپرسید.",
+    "en": "Validates website form leads (Gravity Forms), saves them to Google Sheets and lets you ask questions about them in an AI chat."
+  },
+  "description": {
+    "fa": "این ورک‌فلو از دو بخش مستقل ساخته شده است.\n\nبخش اول، ذخیره لید: یک وب‌هوک امن (با احراز هویت از طریق هدر) داده‌های فرم سایت را از گرویتی فرم دریافت می‌کند. نود اعتبارسنجی داده‌ها را پاک‌سازی می‌کند، ارقام فارسی و عربی را به انگلیسی تبدیل می‌کند، شماره موبایل ایرانی را به قالب بین‌المللی (+98) درمی‌آورد و ایمیل، تلفن، شناسه رویداد و آدرس صفحه را بررسی می‌کند. اگر داده نامعتبر باشد، پاسخ ۴۲۲ همراه با فهرست خطاها برمی‌گردد. در غیر این صورت لید در برگه Leads گوگل شیت ذخیره می‌شود. چون ردیف‌ها بر اساس event_id افزوده یا به‌روزرسانی می‌شوند، ارسال تکراری یک فرم باعث ایجاد ردیف تکراری نمی‌شود.\n\nبخش دوم، دستیار لیدها: یک چت هوشمند با حافظه ۱۰ پیام اخیر، پیش از هر پاسخ ردیف‌های گوگل شیت را می‌خواند و فقط بر پایه همان داده‌ها جواب می‌دهد. به همان زبانی که کاربر می‌نویسد (فارسی یا انگلیسی) پاسخ می‌دهد؛ مثلاً «امروز چند لید داشتیم؟».\n\nبرای استفاده: فایل را وارد n8n کنید، اعتبارنامه‌های Google Sheets، OpenRouter و احراز هویت هدر وب‌هوک را تنظیم کنید، شناسه گوگل شیت خودتان را جایگزین کنید و آدرس وب‌هوک را در افزونه وب‌هوک گرویتی فرم وارد کنید.",
+    "en": "This workflow is made of two independent parts.\n\nPart one, saving leads: a secured webhook (header authentication) receives website form submissions from Gravity Forms. A validation node cleans the data, converts Persian and Arabic digits to Latin, normalizes Iranian mobile numbers to international format (+98) and checks the email, phone, event ID and source URL. Invalid payloads get a 422 response with the list of errors; valid ones are saved to the Leads sheet in Google Sheets. Rows are appended or updated by event_id, so a duplicate submission never creates a duplicate row.\n\nPart two, the leads assistant: an AI chat with a 10-message memory reads the Google Sheet rows before every answer and responds only from that data. It replies in the language the user writes in (Persian or English), for example \"How many leads did we get today?\".\n\nTo use it: import the file into n8n, set up your Google Sheets, OpenRouter and webhook header-auth credentials, replace the spreadsheet with your own and enter the webhook URL in the Gravity Forms webhook add-on."
+  },
+  "tags": {
+    "fa": ["گوگل شیت", "لید", "گرویتی فرم", "وردپرس", "هوش مصنوعی", "وب‌هوک"],
+    "en": ["Google Sheets", "Leads", "Gravity Forms", "WordPress", "AI", "Webhook"]
+  },
+  "difficulty": { "fa": "متوسط", "en": "Intermediate" },
+  "created": "2026-11-03",
+  "image": "preview.png",
+  "workflow": "workflow.json",
+  "nodes": ["Webhook", "Code", "IF", "Google Sheets", "Respond to Webhook", "Chat Trigger", "AI Agent", "OpenRouter", "Window Buffer Memory"],
+  "featured": true
+}

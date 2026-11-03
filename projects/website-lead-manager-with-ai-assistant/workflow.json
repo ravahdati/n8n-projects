@@ -1,0 +1,473 @@
+{
+  "name": "Portfolio | Website Leads to Google Sheets + AI Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node: Run Once for All Items. Same source is exercised by tests.\nconst input = $input.first().json;\nconst p = input.body || {};\nconst clean = (v, max) => String(v ?? '').replace(/[\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]/g, '').trim().slice(0,max);\nconst digits = v => v.replace(/[۰-۹]/g,c=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c))).replace(/[٠-٩]/g,c=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(c)));\nconst email=clean(p.email,254).toLowerCase();\nlet phone=digits(clean(p.phone,40)).replace(/[\\s().-]/g,'');\nif (/^0098\\d{10}$/.test(phone)) phone='+'+phone.slice(2);\nif (/^09\\d{9}$/.test(phone)) phone='+98'+phone.slice(1);\nconst errors=[];\nif (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) errors.push('Invalid email');\nif (phone && !/^\\+?[0-9]{7,15}$/.test(phone)) errors.push('Invalid phone');\nif (!email && !phone) errors.push('Email or phone is required');\nconst event_id=clean(p.event_id,220);\nif (!/^[a-zA-Z0-9:._-]{3,220}$/.test(event_id)) errors.push('Invalid event_id');\nlet source_url=clean(p.source_url,1000);\nif (source_url && !/^https?:\\/\\/[^\\s]+$/i.test(source_url)) errors.push('Invalid source_url');\nif (errors.length) return [{json:{valid:false,ok:false,errors}}];\nreturn [{json:{valid:true,event_id,contact_key:email?'email:'+email:'phone:'+phone,\n name:clean(p.name,200),email,phone,message:clean(p.message,5000),source_url,\n form_id:clean(p.form_id,30),entry_id:clean(p.entry_id,30),\n received_at:new Date().toISOString()}}];\n"
+      },
+      "id": "3fe193d1-228f-47b9-af2a-c2566796568e",
+      "name": "Normalize and validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1392,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3d8e6f21-6ee6-43ae-b640-23c22236e9c7",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e2886ff0-a850-4e4b-8af5-e24dcaafb158",
+      "name": "Valid payload?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1168,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1vRXuokcld8YhmHvYayUFTa9mTMIaUqm0SCb7_sh7XK0",
+          "mode": "list",
+          "cachedResultName": "n8n_form",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vRXuokcld8YhmHvYayUFTa9mTMIaUqm0SCb7_sh7XK0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "event_id"
+          ],
+          "value": {
+            "event_id": "={{ $json.event_id }}",
+            "received_at": "={{ $json.received_at }}",
+            "name": "={{ $json.name }}",
+            "email": "={{ $json.email }}",
+            "phone": "={{ $json.phone }}",
+            "message": "={{ $json.message }}",
+            "source_url": "={{ $json.source_url }}",
+            "form_id": "={{ $json.form_id }}",
+            "entry_id": "={{ $json.entry_id }}",
+            "contact_key": "={{ $json.contact_key }}"
+          },
+          "schema": [
+            {
+              "id": "event_id",
+              "displayName": "event_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "received_at",
+              "displayName": "received_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_url",
+              "displayName": "source_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "form_id",
+              "displayName": "form_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "entry_id",
+              "displayName": "entry_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contact_key",
+              "displayName": "contact_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3f756ad7-1b55-4c33-b502-3c521ccde758",
+      "name": "Save lead to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -944,
+        592
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oY3AIGQDt9UDIUaZ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {ok:true, event_id:$json.event_id} }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "41c84d47-e2c1-4cf8-afc5-46aeb8a36e7c",
+      "name": "Accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -720,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {ok:false, errors:$json.errors} }}",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "id": "352d644b-f121-457c-809f-1122bb42a609",
+      "name": "Invalid payload",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -944,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "41997653-25d2-4f7e-a36b-0a8c48af9086",
+      "name": "Leads Chat",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -448,
+        704
+      ],
+      "webhookId": "6340bf02-fe34-4359-bf20-34b54b5a53c2"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are an assistant that answers questions about website leads stored in a Google Sheet. Always use the read_leads tool to fetch the rows before answering, and base your answer only on that data. The sheet columns are: event_id, received_at (ISO date), name, email, phone, message, source_url, form_id, entry_id, contact_key. If the data does not contain the answer, say so clearly. Reply in the same language the user writes in (Persian or English)."
+        }
+      },
+      "id": "da78111c-a8a1-490a-95b2-e07d60e7fd58",
+      "name": "Leads Assistant",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -80,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-6-luna",
+        "options": {}
+      },
+      "id": "7e49ecc6-bfeb-4b56-b49e-918b788fdc7a",
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        832
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "HRXB7iV5ejYSgRNt",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "8b919525-875e-4aad-b4f0-bbf006d748f4",
+      "name": "Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -16,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vRXuokcld8YhmHvYayUFTa9mTMIaUqm0SCb7_sh7XK0",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "d5f7ff8b-e98e-4042-8221-88f56c056bdf",
+      "name": "read_leads",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        128,
+        832
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oY3AIGQDt9UDIUaZ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gravity-forms-leads",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1e6b11e3-2efa-4a67-9a68-2acb58de3e49",
+      "name": "Get Form Lead - Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        688
+      ],
+      "webhookId": "cbf2a353-1854-4d4e-928c-80baf3ce4b4e"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Normalize and validate": {
+      "main": [
+        [
+          {
+            "node": "Valid payload?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid payload?": {
+      "main": [
+        [
+          {
+            "node": "Save lead to Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save lead to Google Sheet": {
+      "main": [
+        [
+          {
+            "node": "Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leads Chat": {
+      "main": [
+        [
+          {
+            "node": "Leads Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Leads Assistant",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Leads Assistant",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read_leads": {
+      "ai_tool": [
+        [
+          {
+            "node": "Leads Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Form Lead - Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize and validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3215acda-81f1-46c0-9346-7dbb7c8ce829",
+  "meta": {
+    "instanceId": "644a50724117272c9c54df881f1b0f439a9620abe7b6557f640fc091b8e504d7"
+  },
+  "nodeGroups": [
+    {
+      "id": "0659f5ee-057d-4597-881a-91b7b607576a",
+      "name": "Store incoming lead",
+      "nodeIds": [
+        "3fe193d1-228f-47b9-af2a-c2566796568e",
+        "e2886ff0-a850-4e4b-8af5-e24dcaafb158",
+        "352d644b-f121-457c-809f-1122bb42a609",
+        "3f756ad7-1b55-4c33-b502-3c521ccde758",
+        "41c84d47-e2c1-4cf8-afc5-46aeb8a36e7c"
+      ],
+      "description": "Cleans and checks the form data, rejects bad payloads (422), and adds or updates the row by event_id in the Leads sheet"
+    },
+    {
+      "id": "5b5b195d-2102-4a60-91bc-1e3053b2b5b9",
+      "name": "Answer lead questions",
+      "nodeIds": [
+        "da78111c-a8a1-490a-95b2-e07d60e7fd58",
+        "7e49ecc6-bfeb-4b56-b49e-918b788fdc7a",
+        "8b919525-875e-4aad-b4f0-bbf006d748f4",
+        "d5f7ff8b-e98e-4042-8221-88f56c056bdf"
+      ],
+      "description": "Chat questions are answered by reading the Leads sheet rows; replies follow the user language"
+    }
+  ],
+  "id": "1OgWCV136zQxTO7t",
+  "tags": []
+}

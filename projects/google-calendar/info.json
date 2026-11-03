@@ -1,0 +1,24 @@
+{
+  "title": {
+    "fa": "دستیار تقویم گوگل در تلگرام (متن و صدا)",
+    "en": "Google Calendar Assistant on Telegram (Text & Voice)"
+  },
+  "summary": {
+    "fa": "با پیام متنی یا صوتی در تلگرام، رویدادهای گوگل کلندر را بسازید، ببینید، ویرایش کنید و حذف کنید.",
+    "en": "Create, view, update and delete Google Calendar events with a text or voice message in Telegram."
+  },
+  "description": {
+    "fa": "این ورک‌فلو یک دستیار هوشمند تقویم است که از طریق تلگرام کار می‌کند. کاربر می‌تواند به زبان طبیعی پیام بدهد، مثلاً «فردا ساعت ۱۰ جلسه با تیم بذار» یا «این هفته چه برنامه‌ای دارم؟».\n\nمسیر ورودی را یک نود تفکیک‌کننده تعیین می‌کند. پیام متنی مستقیم به عامل هوش مصنوعی می‌رود. پیام صوتی ابتدا از تلگرام دانلود و با OpenAI به متن تبدیل می‌شود و بعد به همان عامل می‌رسد.\n\nعامل هوش مصنوعی (GPT-4o mini) تاریخ و زمان فعلی را می‌داند و بر اساس درخواست کاربر یکی از چهار ابزار گوگل کلندر را انتخاب می‌کند: ساخت رویداد، دریافت رویدادها (تا ۴ هفته آینده)، ویرایش رویداد یا حذف رویداد. اگر درخواست به تقویم مربوط نباشد، خودش به‌عنوان یک دستیار عمومی پاسخ می‌دهد و همیشه به زبانی جواب می‌دهد که کاربر نوشته است. پاسخ نهایی در تلگرام برای کاربر ارسال می‌شود.\n\nبرای استفاده: فایل را وارد n8n کنید، اعتبارنامه‌های Telegram، Google Calendar و OpenAI را تنظیم کنید و در هر چهار ابزار تقویم، تقویم خودتان را انتخاب کنید.",
+    "en": "This workflow is a smart calendar assistant that runs through Telegram. Users can write in natural language, for example \"Schedule a team meeting tomorrow at 10\" or \"What's on my agenda this week?\".\n\nA switch node decides the input path. Text messages go straight to the AI agent. Voice messages are first downloaded from Telegram and transcribed with OpenAI, then passed to the same agent.\n\nThe AI agent (GPT-4o mini) knows the current date and time and picks one of four Google Calendar tools based on the request: create an event, get events (up to 4 weeks ahead), update an event or delete an event. If the request isn't about the calendar, it answers as a general assistant, always replying in the language the user wrote in. The final answer is sent back in Telegram.\n\nTo use it: import the file into n8n, set up your Telegram, Google Calendar and OpenAI credentials and select your own calendar in all four calendar tools."
+  },
+  "tags": {
+    "fa": ["گوگل کلندر", "تلگرام", "هوش مصنوعی", "پیام صوتی", "دستیار"],
+    "en": ["Google Calendar", "Telegram", "AI", "Voice", "Assistant"]
+  },
+  "difficulty": { "fa": "متوسط", "en": "Intermediate" },
+  "created": "2026-11-03",
+  "image": "preview.png",
+  "workflow": "workflow.json",
+  "nodes": ["Telegram Trigger", "Switch", "Telegram", "OpenAI", "AI Agent", "Window Buffer Memory", "Google Calendar", "Set"],
+  "featured": false
+}

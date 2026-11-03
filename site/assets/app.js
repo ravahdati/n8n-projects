@@ -24,6 +24,12 @@
       notFound: 'این پروژه پیدا نشد.',
       loadError: 'خطا در بارگذاری لیست پروژه‌ها.',
       footer: 'ساخته‌شده با n8n',
+      contactTitle: 'ارتباط با من',
+      contactText: 'برای گفتگو درباره پروژه‌ها و همکاری، در ارتباط باشیم.',
+      contactTelegram: 'تلگرام',
+      contactLinkedin: 'لینکدین',
+      contactGithub: 'گیت‌هاب',
+      sourceCode: 'کد منبع پروژه',
     },
     en: {
       siteName: 'n8n Projects',
@@ -46,6 +52,12 @@
       notFound: 'Project not found.',
       loadError: 'Could not load the project list.',
       footer: 'Built with n8n',
+      contactTitle: 'Get in touch',
+      contactText: 'Let’s talk about projects and working together.',
+      contactTelegram: 'Telegram',
+      contactLinkedin: 'LinkedIn',
+      contactGithub: 'GitHub',
+      sourceCode: 'Project source code',
     },
   };
 
